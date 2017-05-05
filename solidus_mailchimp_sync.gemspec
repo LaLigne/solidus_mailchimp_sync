@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.files = Dir["{app,config,db,lib}/**/*", 'LICENSE', 'Rakefile', 'README.md']
   s.test_files = Dir['test/**/*']
 
-  s.add_dependency 'solidus_core', '~> 1.2'
+  s.add_dependency 'solidus_core', '~> 1.0.6'
   s.add_dependency 'http', '~> 2.0'
   s.add_dependency 'ruby-progressbar', '~> 1.0' # already a solidus dependency
 
