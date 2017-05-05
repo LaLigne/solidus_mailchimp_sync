@@ -50,7 +50,12 @@ namespace :solidus_mailchimp_sync do
     product_count = Spree::Product.count
     progress_bar = ProgressBar.create(total: product_count, format: progress_format, title: "Spree::Products")
     Spree::Product.find_each do |product|
-      SolidusMailchimpSync::ProductSynchronizer.new(product).sync
+      begin
+        SolidusMailchimpSync::ProductSynchronizer.new(product).sync
+      rescue SolidusMailchimpSync::Error => e
+        puts product.inspect
+        raise e
+      end
       progress_bar.increment
     end
     progress_bar.finish
@@ -58,7 +63,11 @@ namespace :solidus_mailchimp_sync do
     order_count = Spree::Order.complete.count
     progress_bar = ProgressBar.create(total: order_count, format: progress_format, title: "Completed Spree::Orders")
     Spree::Order.complete.find_each do |order|
-      SolidusMailchimpSync::OrderSynchronizer.new(order).sync
+      begin
+        SolidusMailchimpSync::OrderSynchronizer.new(order).sync
+      rescue SolidusMailchimpSync::Error => e
+        puts order.inspect
+      end
       progress_bar.increment
     end
     progress_bar.finish
