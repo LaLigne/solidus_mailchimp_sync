@@ -25,11 +25,19 @@ module SolidusMailchimpSync
     end
 
     def path
-      "/products/#{product_id}"
+      "/products/#{CGI.escape mailchimp_id}"
     end
 
     def create_path
       "/products"
+    end
+
+    def mailchimp_id
+      self.class.product_id(model)
+    end
+
+    def self.product_id(product)
+      serializer_class_name.constantize.new(product).as_json[:id]
     end
 
     def sync_all_variants

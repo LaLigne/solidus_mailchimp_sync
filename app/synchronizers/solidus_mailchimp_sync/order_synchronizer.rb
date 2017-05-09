@@ -90,7 +90,7 @@ module SolidusMailchimpSync
     end
 
     def cart_path
-      "/carts/#{model.id}"
+      "/carts/#{CGI.escape mailchimp_id}"
     end
 
     def create_cart_path
@@ -98,11 +98,19 @@ module SolidusMailchimpSync
     end
 
     def order_path
-      "/orders/#{model.id}"
+      "/orders/#{CGI.escape mailchimp_id}"
     end
 
     def create_order_path
       "/orders"
+    end
+
+    def mailchimp_id
+      self.class.order_id(model)
+    end
+
+    def self.order_id(order)
+      serializer_class_name.constantize.new(order).as_json[:id]
     end
   end
 end

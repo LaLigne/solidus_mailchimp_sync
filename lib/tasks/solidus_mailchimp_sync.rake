@@ -67,6 +67,7 @@ namespace :solidus_mailchimp_sync do
         SolidusMailchimpSync::OrderSynchronizer.new(order).sync
       rescue SolidusMailchimpSync::Error => e
         puts order.inspect
+        raise e
       end
       progress_bar.increment
     end
