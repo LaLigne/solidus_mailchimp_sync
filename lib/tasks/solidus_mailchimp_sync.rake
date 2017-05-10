@@ -62,7 +62,8 @@ namespace :solidus_mailchimp_sync do
       progress_bar = ProgressBar.create(total: user_count, format: progress_format, title: Spree.user_class.name.pluralize)
       Spree.user_class.find_each do |user|
         begin
-          SolidusMailchimpSync::UserSynchronizer.new(user).sync
+          synchronizer = SolidusMailchimpSync::UserSynchronizer.new(user)
+          synchronizer.sync if synchronizer.can_sync?
         rescue SolidusMailchimpSync::Error => e
           # just so we know what user failed.
           puts user.inspect
@@ -77,7 +78,8 @@ namespace :solidus_mailchimp_sync do
     progress_bar = ProgressBar.create(total: product_count, format: progress_format, title: "Spree::Products")
     Spree::Product.find_each do |product|
       begin
-        SolidusMailchimpSync::ProductSynchronizer.new(product).sync
+        synchronizer = SolidusMailchimpSync::ProductSynchronizer.new(product)
+        synchronizer.sync if synchronizer.can_sync?
       rescue SolidusMailchimpSync::Error => e
         puts product.inspect
         raise e
@@ -90,7 +92,8 @@ namespace :solidus_mailchimp_sync do
     progress_bar = ProgressBar.create(total: order_count, format: progress_format, title: "Completed Spree::Orders")
     Spree::Order.complete.find_each do |order|
       begin
-        SolidusMailchimpSync::OrderSynchronizer.new(order).sync
+        synchronizer = SolidusMailchimpSync::OrderSynchronizer.new(order)
+        synchronizer.sync if synchronizer.can_sync?
       rescue SolidusMailchimpSync::Error => e
         puts order.inspect
         raise e
