@@ -23,6 +23,32 @@ namespace :solidus_mailchimp_sync do
     puts
   end
 
+  desc "enable is_syncing mode"
+  task :enable_is_syncing => :environment do
+    puts "Enabling is_syncing mode"
+    response = SolidusMailchimpSync::Mailchimp.request(:patch, "/ecommerce/stores/#{CGI.escape ENV['MAILCHIMP_STORE_ID']}", body: {
+      is_syncing: true,
+    })
+    if response['is_syncing']
+      puts "is_syncing mode was enabled successfully."
+    else
+      puts "is_syncing mode was not enabled."
+    end
+  end
+
+  desc "disable is_syncing mode"
+  task :disable_is_syncing => :environment do
+    puts "Disable is_syncing mode"
+    response = SolidusMailchimpSync::Mailchimp.request(:patch, "/ecommerce/stores/#{CGI.escape ENV['MAILCHIMP_STORE_ID']}", body: {
+      is_syncing: false,
+    })
+    if !response['is_syncing']
+      puts "is_syncing mode was disabled successfully."
+    else
+      puts "is_syncing mode was not disabled."
+    end
+  end
+
   desc "sync ALL data to mailchimp"
   task :bulk_sync => :environment do
     require 'ruby-progressbar'
