@@ -33,8 +33,13 @@ module SolidusMailchimpSync
       pk_changed && pk_changed.first.nil? && pk_changed.second.present?
     end
 
+    # Override for conditional sync logic
+    def can_sync?
+      true
+    end
+
     def should_sync?
-      was_newly_inserted? || synced_attributes_changed?
+      (was_newly_inserted? || synced_attributes_changed?) && can_sync?
     end
 
     # This gets a lot harder when associations are involved, haven't completely solved it.

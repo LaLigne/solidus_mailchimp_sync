@@ -35,13 +35,13 @@ module SolidusMailchimpSync
       end
     end
 
-    def sync
+    def can_sync?
       # If we don't have a user with an email address we can't sync -- mailchimp
       # carts and orders require a customer, which requires an email address.
-      unless model.user.present? && model.user.send(UserSynchronizer.email_address_attribute).present?
-        return nil
-      end
+      model.user.present? && model.user.send(UserSynchronizer.email_address_attribute).present?
+    end
 
+    def sync
       # Can't sync an empty cart to mailchimp, delete the cart/order if
       # we've previously synced, and bail out of this sync.
       if model.line_items.empty?

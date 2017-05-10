@@ -8,7 +8,7 @@ module SolidusMailchimpSync
     class_attribute :only_auto_sync_if
     self.only_auto_sync_if = lambda { |p| p.available? }
 
-    def should_sync?
+    def can_sync?
        only_auto_sync_if.call(model) && super
     end
 

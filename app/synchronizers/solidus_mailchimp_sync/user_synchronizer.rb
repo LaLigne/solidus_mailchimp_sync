@@ -8,14 +8,13 @@ module SolidusMailchimpSync
     class_attribute :email_address_attribute
     self.email_address_attribute = :email
 
+    def can_sync?
+      model.send(email_address_attribute).present?
+    end
+
     # synchronizers local user to Mailchimp customer. Whether Customer
     # already existed on mailchimp end or not. Deletes if deleted.
     def sync
-      if model.send(email_address_attribute).blank?
-        # can't sync a user without an email address, mailchimp doesn't allow it
-        return nil
-      end
-
       if model.deleted?
         delete
       else
