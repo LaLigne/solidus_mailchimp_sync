@@ -13,12 +13,10 @@ module SolidusMailchimpSync
     end
 
     def sync
-      # We go ahead and try to create it. If it already existed, mailchimp
-      # doesn't let us do an update, but we can update all variants.
       post
     rescue SolidusMailchimpSync::Error => e
       if e.status == 400 && e.detail =~ /already exists/
-        sync_all_variants
+        patch
       else
         raise e
       end
