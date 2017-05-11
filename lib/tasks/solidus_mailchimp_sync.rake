@@ -88,9 +88,14 @@ namespace :solidus_mailchimp_sync do
     end
     progress_bar.finish
 
-    order_count = Spree::Order.complete.count
-    progress_bar = ProgressBar.create(total: order_count, format: progress_format, title: "Completed Spree::Orders")
-    Spree::Order.complete.find_each do |order|
+    # Exclude orders which have variants that no longer exist
+    exclude_order_ids = Spree::LineItem.where(variant_id: Spree::Variant.deleted).pluck(:order_id).uniq
+
+    order_arel = Spree::Order.complete.where('id NOT IN (?)', exclude_order_ids)
+
+    progress_bar = ProgressBar.create(total: order_arel.count, format: progress_format, title: "Completed Spree::Orders")
+
+    order_arel.find_each do |order|
       begin
         synchronizer = SolidusMailchimpSync::OrderSynchronizer.new(order)
         synchronizer.sync if synchronizer.can_sync?
