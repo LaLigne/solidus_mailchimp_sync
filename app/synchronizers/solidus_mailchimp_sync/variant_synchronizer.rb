@@ -5,14 +5,18 @@ module SolidusMailchimpSync
     self.synced_attributes = %w{id sku}
 
     def sync
-      put
-    rescue SolidusMailchimpSync::Error => e
-      tries ||= 0 ; tries += 1
-      if tries <= 1 && e.status == 400 && e.title == 'Parent Product Does Not Exist'
-        ProductSynchronizer.new(model.product).sync
-        retry
-      else
-        raise e
+      return delete(ignore_404: true) if model.deleted?
+
+      begin
+        put
+      rescue SolidusMailchimpSync::Error => e
+        tries ||= 0 ; tries += 1
+        if tries <= 1 && e.status == 400 && e.title == 'Parent Product Does Not Exist'
+          ProductSynchronizer.new(model.product).sync
+          retry
+        else
+          raise e
+        end
       end
     end
 

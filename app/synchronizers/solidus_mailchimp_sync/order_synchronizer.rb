@@ -8,13 +8,11 @@ module SolidusMailchimpSync
     # Also, when solidus sets completed_at, it seems not to trigger
     # an after_commit, so we can't catch transition to complete that way.
     #
-    # We used to update on changes to any totals thinking we could catch
-    # line item changes that way -- but removing a line item and adding
-    # another with the exact same price wouldn't trigger total changes, so
-    # we had to trap all line item changes instead on a LineItem decorator,
-    # so sync'ing on changes to order totals isn't neccesary just causes
-    # extra superfluous syncs.
-    self.synced_attributes = %w{state}
+    # We update on changes to any totals, but removing a line item and adding
+    # another with the exact same price won't trigger total changes, so
+    # we also trap all line item changes on a LineItem decorator.
+    # This might result in some superfluous syncs.
+    self.synced_attributes = %w{state total tax_total}
 
     class_attribute :line_item_serializer_class_name
     self.line_item_serializer_class_name = "::SolidusMailchimpSync::LineItemSerializer"
@@ -57,6 +55,7 @@ module SolidusMailchimpSync
       end
 
       post_or_patch(post_path: create_path, patch_path: path)
+      check_and_delete_line_items
     rescue SolidusMailchimpSync::Error => e
       tries ||= 0 ; tries += 1
       if tries <= 1 && user_not_synced_error?(e)
@@ -64,6 +63,18 @@ module SolidusMailchimpSync
         retry
       else
         raise e
+      end
+    end
+
+    def check_and_delete_line_items
+      # TODO: we perhaps need a LineItemSynchronizer to handle this formally.
+      return if order_complete?
+
+      mailchimp_line_item_ids = get.with_indifferent_access[:lines].map { |line| line[:id] }
+      existing_line_item_ids = serializer.as_json.with_indifferent_access[:lines].map { |line| line[:id] }
+      line_item_ids_to_delete = mailchimp_line_item_ids - existing_line_item_ids
+      line_item_ids_to_delete.each do |line_item_id|
+        delete("#{cart_path}/lines/#{CGI.escape line_item_id}", ignore_404: true)
       end
     end
 
