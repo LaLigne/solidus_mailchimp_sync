@@ -17,6 +17,15 @@ module SolidusMailchimpSync
     class_attribute :line_item_serializer_class_name
     self.line_item_serializer_class_name = "::SolidusMailchimpSync::LineItemSerializer"
 
+    class_attribute :only_auto_sync_if
+    # By default only sync if we can provide a customer ID. This can be overridden
+    # to provide alternative logic.
+    self.only_auto_sync_if = lambda { |o| o.user.present? && o.user.send(UserSynchronizer.email_address_attribute).present? }
+
+    def can_sync?
+       only_auto_sync_if.call(model) && super
+    end
+
     def path
       if order_complete?
         order_path
@@ -31,12 +40,6 @@ module SolidusMailchimpSync
       else
         create_cart_path
       end
-    end
-
-    def can_sync?
-      # If we don't have a user with an email address we can't sync -- mailchimp
-      # carts and orders require a customer, which requires an email address.
-      model.user.present? && model.user.send(UserSynchronizer.email_address_attribute).present?
     end
 
     def sync
@@ -58,7 +61,7 @@ module SolidusMailchimpSync
       check_and_delete_line_items
     rescue SolidusMailchimpSync::Error => e
       tries ||= 0 ; tries += 1
-      if tries <= 1 && user_not_synced_error?(e)
+      if tries <= 1 && user_not_synced_error?(e) && model.user
         SolidusMailchimpSync::UserSynchronizer.new(model.user).sync
         retry
       else
