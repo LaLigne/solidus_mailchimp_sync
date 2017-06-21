@@ -45,7 +45,7 @@ module SolidusMailchimpSync
     def sync
       # Handle deleted orders and empty carts (carts cannot be empty on Mailchimp).
       # Delete the cart/order if we've previously synced, and bail out of this sync.
-      return delete(path, ignore_404: true) if model.deleted? || model.line_items.empty?
+      return delete(path, ignore_404: true) if model.line_items.empty?
 
       # if it's a completed order, delete any previous synced _cart_ version
       # of this order, if one is present. There should be no Mailchimp 'cart',
